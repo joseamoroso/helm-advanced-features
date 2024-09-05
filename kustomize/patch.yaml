@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doesNotMatter
+spec:
+  template:
+    spec:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+                - key: "${NODE_LABEL_KEY}"
+                  operator: In
+                  values:
+                    - "${NODE_LABEL_VALUE}"

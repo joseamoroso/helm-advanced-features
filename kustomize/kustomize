@@ -1,0 +1,11 @@
+#!/bin/bash
+
+export NODE_LABEL_KEY="kubernetes.io/hostname"
+export NODE_LABEL_VALUE="docker-desktop"
+
+envsubst < kustomize/patch.yaml > kustomize/patch-interpolated.yaml
+cat <&0 > kustomize/all.yaml
+kubectl kustomize kustomize
+
+# Clean up
+rm kustomize/all.yaml kustomize/patch-interpolated.yaml
