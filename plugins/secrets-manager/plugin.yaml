@@ -1,0 +1,13 @@
+name: "secrets-manager"
+version: "0.1.0"
+usage: "A Helm plugin to enforce security best practices in your Helm charts"
+description: "This plugin helps you to enforce security best practices in your Helm charts"
+command: "$HELM_PLUGIN_DIR/scripts/secrets-manager.sh"
+hooks:
+  install: |
+    echo "Installing secrets-manager"
+  update: |
+    echo "Updating secrets-manager"
+  uninstall: |
+    echo "Uninstalling secrets-manager"
+
