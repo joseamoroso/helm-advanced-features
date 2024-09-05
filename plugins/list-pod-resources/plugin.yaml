@@ -1,0 +1,5 @@
+name: "helm-list-resources"
+version: "0.1.0"
+usage: "List all CPU and RAM resources that will be used during the deployment"
+description: "A Helm plugin to list all CPU and Memory resource requests and limits in a Helm chart"
+command: "/Users/joseamoroso/Repos/wschallenge/helm-advanced-features/plugins/list-pod-resources/list-helm-resources.sh"
