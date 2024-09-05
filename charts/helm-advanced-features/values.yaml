@@ -79,4 +79,4 @@ affinity: {}
 
 envVariables:
   user: admin
-  passwords: "encryptthi5@"
+  passwords: "encryptthi5@A"

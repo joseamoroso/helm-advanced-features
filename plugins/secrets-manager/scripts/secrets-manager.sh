@@ -23,6 +23,16 @@ LOWERCASE_REGEX='[a-z]'
 DIGIT_REGEX='[0-9]'
 SPECIAL_CHAR_REGEX='[^a-zA-Z0-9]'
 
+SECRET_TEMPLATE=$(cat <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: userpassword
+type: Opaque
+data:
+EOF
+)
+
 # Flag to track if any password-related field was found and validated
 found_key=0
 
@@ -63,6 +73,11 @@ for key in "${KEYS[@]}"; do
       echo "Error: The value for '$key' must contain at least one special character"
       exit 1
     fi
+
+    # Add the password to the secret, base64 encoding the value
+    BASE64_VALUE=$(echo -n "$VALUE" | base64)
+    SECRET_TEMPLATE+=$'\n'"  password: $BASE64_VALUE"
+
   fi
 done
 
@@ -71,6 +86,21 @@ if [[ $found_key -eq 0 ]]; then
   echo "No password-related field (passwords, pwd, credentials, pass) found in $VALUES_FILE"
 else
   echo "Validation successful! All password-related fields meet the security requirements."
+
+  # Write the secret to a YAML file
+  SECRET_FILE="password-secret.yaml"
+  echo "$SECRET_TEMPLATE" > "$SECRET_FILE"
+  
+  echo "Secret YAML has been generated: $SECRET_FILE"
+
+  # Optionally apply the secret (requires kubectl installed and configured)
+  echo "Applying secret to Kubernetes..."
+  
+  kubectl apply -f "$SECRET_FILE"
+
+  echo "Secret has been applied to Kubernetes."
+
+  rm $SECRET_FILE
 fi
 
 exit 0
