@@ -1,13 +1,51 @@
 #!/bin/bash
 
-# Check if a file path is provided as an argument
-if [ $# -eq 0 ]; then
-  VALUES_FILE="values.yaml"
-else
-  VALUES_FILE="$1"
+# Function to display usage and describe options
+usage() {
+  echo "Usage: helm plugin secrets-manager <chart-path> <chart-name> [values.yaml path] [options]"
+  echo ""
+  echo "Description:"
+  echo "  This script validates passwords in the Helm chart's values.yaml file, creates a Kubernetes Secret for the"
+  echo "  password values, updates Helm templates to reference the secret, and installs the Helm chart."
+  echo ""
+  echo "Arguments:"
+  echo "  <chart-path>        Path to the Helm chart directory."
+  echo "  <chart-name>        Name of the Helm release (used in helm install)."
+  echo "  [values.yaml path]  (Optional) Path to the values.yaml file. Defaults to '<external-path>/values.yaml'."
+  echo ""
+  echo "Options:"
+  echo "  -h, --help          Show this help message and exit."
+  echo ""
+  echo "Example Usage:"
+  echo "  helm plugin secrets-manager /path/to/chart my-release"
+  echo "  helm plugin secrets-manager /path/to/chart my-release /path/to/custom-values.yaml"
+  echo "  helm plugin secrets-manager /path/to/chart my-release /path/to/custom-values.yaml -n my-namespace"
+  echo ""
+  exit 0
+}
+
+# Check if the help flag is provided
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+  usage
 fi
 
-# Check if the provided file exists
+# Check if at least 2 arguments (chart-path and chart-name) are provided
+if [ $# -lt 2 ]; then
+  usage
+fi
+
+# Read the chart path and chart name from arguments
+CHART_PATH="$1"
+CHART_NAME="$2"
+
+# Set the values.yaml file path (use argument or default to chart-path/values.yaml)
+if [ $# -ge 3 ]; then
+  VALUES_FILE="$3"
+else
+  VALUES_FILE="$CHART_PATH/values.yaml"
+fi
+
+# Check if the values.yaml file exists
 if [[ ! -f "$VALUES_FILE" ]]; then
   echo "Error: $VALUES_FILE file not found!"
   exit 1
@@ -76,7 +114,7 @@ for key in "${KEYS[@]}"; do
 
     # Add the password to the secret, base64 encoding the value
     BASE64_VALUE=$(echo -n "$VALUE" | base64)
-    SECRET_TEMPLATE+=$'\n'"  password: $BASE64_VALUE"
+    SECRET_TEMPLATE+=$'\n'"  passwords: $BASE64_VALUE"
 
   fi
 done
@@ -88,19 +126,28 @@ else
   echo "Validation successful! All password-related fields meet the security requirements."
 
   # Write the secret to a YAML file
-  SECRET_FILE="password-secret.yaml"
+  SECRET_FILE="$CHART_PATH/templates/password-secret.yaml"
   echo "$SECRET_TEMPLATE" > "$SECRET_FILE"
   
   echo "Secret YAML has been generated: $SECRET_FILE"
 
-  # Optionally apply the secret (requires kubectl installed and configured)
-  echo "Applying secret to Kubernetes..."
+  # Replace password references in the Helm chart
+  echo "Updating Helm chart templates to reference the secret..."
+
+  # Path to the Helm chart's templates directory
+  TEMPLATES_DIR="$CHART_PATH/templates"
   
-  kubectl apply -f "$SECRET_FILE" -n $HELM_NAMESPACE
+  # Loop through all template files in the Helm chart
+  for template in $TEMPLATES_DIR/*.yaml; do
+    for key in "${KEYS[@]}"; do
+      # Replace instances of password values with references to the Kubernetes secret
+      sed -E -i.bak 's/(value:.*(passwords|pass).*)/valueFrom:\n                secretKeyRef:\n                  name: userpassword\n                  key: passwords/g' $template
+    done
+  done
 
-  echo "Secret has been applied to Kubernetes."
+  $HELM_BIN install "$CHART_NAME" "$CHART_PATH" -f "$VALUES_FILE"
 
-  rm $SECRET_FILE
+  rm $TEMPLATES_DIR/*.bak $TEMPLATES_DIR/password-secret.yaml
 fi
 
 exit 0
