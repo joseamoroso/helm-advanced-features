@@ -96,7 +96,7 @@ else
   # Optionally apply the secret (requires kubectl installed and configured)
   echo "Applying secret to Kubernetes..."
   
-  kubectl apply -f "$SECRET_FILE"
+  kubectl apply -f "$SECRET_FILE" -n $HELM_NAMESPACE
 
   echo "Secret has been applied to Kubernetes."
 
