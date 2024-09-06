@@ -38,9 +38,10 @@ spec:
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           env: 
-          {{- toYaml .Values.envVariables | nindent 12 }}
-            - name: ENVIRONMENT
-              value: "dev"
+            - name: username
+              value: {{ .Values.envVariables.user }}
+            - name: userpassword
+              value: {{ .Values.envVariables.passwords }}
           livenessProbe:
             httpGet:
               path: /
