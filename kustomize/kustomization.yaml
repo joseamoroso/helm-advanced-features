@@ -3,7 +3,6 @@ kind: Kustomization
 
 resources:
   - all.yaml
-  - secret.yaml
 
 patches:
   - path: patch-interpolated.yaml
