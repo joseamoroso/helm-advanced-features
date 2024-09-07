@@ -24,6 +24,20 @@ usage() {
   exit 0
 }
 
+# Function to check if a Helm release is installed
+is_helm_release_installed() {
+  local release_name=$1
+  local chart_path=$2
+  local values_file=$3
+
+  # Check if the release name exists in the list of installed releases
+  if helm list --filter "^${release_name}$" | grep -q "${release_name}"; then
+    $HELM_BIN upgrade --install "$release_name" "$chart_path" -f "$values_file"
+  else
+    $HELM_BIN install "$release_name" "$chart_path" -f "$values_file"
+  fi
+}
+
 # Default values
 VALUES_FILE=""
 
@@ -161,7 +175,10 @@ else
     done
   done
 
-  # $HELM_BIN install "$CHART_NAME" "$CHART_PATH" -f "$VALUES_FILE"
+  # Check if the Helm release is installed
+  is_helm_release_installed "$CHART_NAME" "$CHART_PATH" "$VALUES_FILE"
+
+  # Cleanup backup files
   rm $TEMPLATES_DIR/*.bak $TEMPLATES_DIR/password-secret.yaml
 fi
 

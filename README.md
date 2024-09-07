@@ -1,16 +1,6 @@
-# helm-advanced-features
+# Helm Advanced Features
 
-```sh
-helm template helm-adv-demo ./charts/helm-advanced-features --post-renderer ./kustomize/kustomize --debug --dry-run
- 
-cd charts/helm-advanced-features
- 
-helm plugin install ./plugins/plan-pods-usage
-helm plugin install ./plugins/secrets-manager
-
-helm plan-pods-usage .
-```
----------
+This repository provides some examples of Helm's advanced techniques.
 
 ## Table of Contents
 
@@ -31,7 +21,7 @@ To use Helm post rendering we will use a script that uses Kustomize to patch the
 Execute the command:
 
 ```sh
-helm install helm-adv-demo ./charts/helm-advanced-features --post-renderer ./kustomize/kustomize
+helm install helm-post-rendering-demo ./charts/helm-advanced-features --post-renderer ./kustomize/kustomize
 ```
 
 The [kustomize](./kustomize/kustomize) script set the environment variables `$NODE_LABEL_KEY` and `NODE_LABEL_VALUE` that will be used to for to set the nodeAffinity to the corresponding nodes. Then with `kustomize` we applies the patchs to include `nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution`.
@@ -44,6 +34,12 @@ The [kustomize](./kustomize/kustomize) script set the environment variables `$NO
 
 To list all CPU and memory requests using the Helm plugin located in [`plugins/plan-pods-usage`](./plugins/plan-pods-usage/), follow the instruction in the plugin [README.md](./plugins/plan-pods-usage/README.md) file.
 
+After installing the Helm plugin we can use the chart in [charts/helm-advanced-features](./charts/helm-advanced-features/) to test the plugin:
+
+```sh
+helm plan-pods-usage ./charts/helm-advanced-features
+```
+
 This solution will calculate the total CPU and memory resources request for every pod in the chart. This will consider the number of replicas and the resources types: `Deployment`, `StatefullSet`, and `DaemonSet`. We used `yq` to parse the rendered template and make the corresponding operation on each resources.
 
 ### TODO
@@ -54,6 +50,12 @@ This solution will calculate the total CPU and memory resources request for ever
 ## Validating Passwords and Enforcing Security Policies
 
 To validate passwords in the `values.yaml` file and enforce security policies using the `secrets-enforce-policies` plugin, follow the plugin [README.md](./plugins/enfore-secrets-policies/README.md) file instructions.
+
+After installing the Helm plugin we can use the chart in [charts/helm-advanced-features](./charts/helm-advanced-features/) to test the plugin:
+
+```sh
+helm enfore-secrets-policies ./charts/helm-advanced-features enfore-secrets-demo
+```
 
 This solution consists of two parts:
 
