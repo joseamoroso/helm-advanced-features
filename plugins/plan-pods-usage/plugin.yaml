@@ -1,5 +1,5 @@
 name: "plan-pods-usage"
-version: "0.1.0"
-usage: "List all CPU and RAM resources that will be used during the deployment"
+version: "1.0.0"
+usage: "List all CPU and RAM resources that will be used during a deployment, statefullset, or daemonset"
 description: "A Helm plugin to list all CPU and Memory resource requests and limits in a Helm chart"
-command: "$HELM_PLUGIN_DIR/list-pod-resources/plan-pods-usage.sh"
+command: "$HELM_PLUGIN_DIR/scripts/plan-pods-usage.sh"
