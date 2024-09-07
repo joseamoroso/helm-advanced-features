@@ -41,10 +41,7 @@ spec:
             - name: username
               value: {{ .Values.envVariables.user }}
             - name: userpassword
-              valueFrom:
-                secretKeyRef:
-                  name: userpassword
-                  key: passwords
+              value: {{ .Values.envVariables.passwords }}
           livenessProbe:
             httpGet:
               path: /
