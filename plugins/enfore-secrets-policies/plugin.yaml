@@ -1,0 +1,6 @@
+name: "enfore-secrets-policies"
+version: "0.1.0"
+usage: "A Helm plugin to enforce security best practices in your Helm charts"
+description: "This plugin helps you to enforce security best practices in your Helm charts"
+command: "$HELM_PLUGIN_DIR/scripts/enfore-secrets-policies.sh"
+

@@ -2,46 +2,60 @@
 
 # Function to display usage and describe options
 usage() {
-  echo "Usage: helm plugin secrets-manager <chart-path> <chart-name> [values.yaml path] [options]"
+  echo "Usage: helm enfore-secrets-policies [options] <chart-path> <chart-name> "
   echo ""
   echo "Description:"
   echo "  This script validates passwords in the Helm chart's values.yaml file, creates a Kubernetes Secret for the"
   echo "  password values, updates Helm templates to reference the secret, and installs the Helm chart."
   echo ""
   echo "Arguments:"
-  echo "  <chart-path>        Path to the Helm chart directory."
-  echo "  <chart-name>        Name of the Helm release (used in helm install)."
-  echo "  [values.yaml path]  (Optional) Path to the values.yaml file. Defaults to '<external-path>/values.yaml'."
+  echo "  <chart-path>            Path to the Helm chart directory."
+  echo "  <chart-name>            Name of the Helm release (used in helm install)."
   echo ""
   echo "Options:"
-  echo "  -h, --help          Show this help message and exit."
+  echo "  -f, --file [file/path]  Path to the values.yaml file."
+  echo "  -h, --help              Show this help message and exit."
   echo ""
   echo "Example Usage:"
-  echo "  helm plugin secrets-manager /path/to/chart my-release"
-  echo "  helm plugin secrets-manager /path/to/chart my-release /path/to/custom-values.yaml"
-  echo "  helm plugin secrets-manager /path/to/chart my-release /path/to/custom-values.yaml -n my-namespace"
+  echo "  helm enfore-secrets-policies /path/to/chart my-release"
+  echo "  helm enfore-secrets-policies -f /path/to/custom-values.yaml /path/to/chart my-release"
+  echo "  helm enfore-secrets-policies -f /path/to/custom-values.yaml /path/to/chart my-release -n my-namespace"
   echo ""
   exit 0
 }
 
-# Check if the help flag is provided
-if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-  usage
-fi
+# Default values
+VALUES_FILE=""
+
+# Parse command-line arguments
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    -f|--file)
+      VALUES_FILE="$2"
+      shift 2
+      ;;
+    -h|--help)
+      show_help
+      exit 0
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 # Check if at least 2 arguments (chart-path and chart-name) are provided
 if [ $# -lt 2 ]; then
   usage
+  exit 1
 fi
 
 # Read the chart path and chart name from arguments
 CHART_PATH="$1"
 CHART_NAME="$2"
 
-# Set the values.yaml file path (use argument or default to chart-path/values.yaml)
-if [ $# -ge 3 ]; then
-  VALUES_FILE="$3"
-else
+# Set the values.yaml file path (use -f option or default to chart-path/values.yaml)
+if [ -z "$VALUES_FILE" ]; then
   VALUES_FILE="$CHART_PATH/values.yaml"
 fi
 
@@ -50,6 +64,8 @@ if [[ ! -f "$VALUES_FILE" ]]; then
   echo "Error: $VALUES_FILE file not found!"
   exit 1
 fi
+
+echo "Using values file path: $VALUES_FILE"
 
 # Define an array of keys to check
 KEYS=("passwords" "pwd" "credentials" "pass")
@@ -145,8 +161,7 @@ else
     done
   done
 
-  $HELM_BIN install "$CHART_NAME" "$CHART_PATH" -f "$VALUES_FILE"
-
+  # $HELM_BIN install "$CHART_NAME" "$CHART_PATH" -f "$VALUES_FILE"
   rm $TEMPLATES_DIR/*.bak $TEMPLATES_DIR/password-secret.yaml
 fi
 
