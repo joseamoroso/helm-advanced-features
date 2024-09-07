@@ -46,3 +46,6 @@ helm plan-pods-usage /path/to/chart -f /path/to/custom-values.yaml -n my-namespa
 helm plugin uninstall plan-pods-usage
 ```
 
+## TODO
+
+- [ ] Add support for other resources units than CPU(m) and memory(Mi).
