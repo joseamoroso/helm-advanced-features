@@ -1,10 +1,16 @@
 #!/bin/bash
 
+# Set the environment variables for the node labels
 export NODE_LABEL_KEY="kubernetes.io/hostname"
 export NODE_LABEL_VALUE="docker-desktop"
 
+# Replace the environment variables in the patch file
 envsubst < kustomize/patch.yaml > kustomize/patch-interpolated.yaml
+
+# Combine the base and the patch
 cat <&0 > kustomize/all.yaml
+
+# Apply the kustomization
 kubectl kustomize kustomize
 
 # Clean up
